@@ -1,5 +1,3 @@
-// app/api/logs/route.ts
-
 type LogEntry = {
   id: number;
   timestamp: string;
