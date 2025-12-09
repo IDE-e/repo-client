@@ -49,18 +49,23 @@ const fileTree: Record<string, FileNode> = {
       pages: {
         type: "folder",
         children: {
+          // "welcome.tsx": { type: "file", route: "/welcome" },
+          "alerts.tsx": { type: "file", route: "/alerts" },
+          "api-client.tsx": { type: "file", route: "/api-client" },
+          "dashboard.tsx": { type: "file", route: "/dashboard" },
+          "brokers.tsx": { type: "file", route: "/brokers" },
+          "cluster.tsx": { type: "file", route: "/cluster" },
+          "topics.tsx": { type: "file", route: "/topics" },
+          "health.tsx": { type: "file", route: "/health" },
           "diff-viewer.tsx": { type: "file", route: "/diff-viewer" },
           "log-explorer.tsx": { type: "file", route: "/log-explorer" },
           "metrics.tsx": { type: "file", route: "/metrics" },
-          "api-client.tsx": { type: "file", route: "/api-client" },
-          "dashboard.tsx": { type: "file", route: "/dashboard" },
           "gallery.tsx": { type: "file", route: "/gallery" },
           "logs.tsx": { type: "file", route: "/logs" },
           "markdown.tsx": { type: "file", route: "/markdown" },
           "settings.tsx": { type: "file", route: "/settings" },
           "terminal.tsx": { type: "file", route: "/terminal" },
           "vs-demo.tsx": { type: "file", route: "/vs-demo" },
-          "welcome.tsx": { type: "file", route: "/welcome" },
         },
       },
       components: {
@@ -317,8 +322,8 @@ export function VSCodeLeftMenu() {
     switch (activeSidebar) {
       case "explorer":
         return (
-          <div className="flex-1 overflow-y-auto">
-            <div className="px-2 py-1">
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
+            <div className="px-2 py-1 pb-3">
               <div className="text-xs text-text-default font-semibold mb-1 uppercase px-2">
                 Project
               </div>
