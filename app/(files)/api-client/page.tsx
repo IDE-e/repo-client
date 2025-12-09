@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Globe, Play, Loader2, Save, Trash2, ChevronDown } from "lucide-react";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
@@ -12,110 +12,91 @@ type SavedRequest = {
   url: string;
 };
 
-const MOCK_SAVED_REQUESTS: SavedRequest[] = [
-  {
-    id: 1,
-    name: "Get Users",
-    method: "GET",
-    url: "https://jsonplaceholder.typicode.com/users",
-  },
-  {
-    id: 2,
-    name: "Get Todos",
-    method: "GET",
-    url: "https://jsonplaceholder.typicode.com/todos",
-  },
-  {
-    id: 3,
-    name: "Create Post",
-    method: "POST",
-    url: "https://jsonplaceholder.typicode.com/posts",
-  },
-];
-
 export default function ApiClientPage() {
   const [method, setMethod] = useState<HttpMethod>("GET");
   const [url, setUrl] = useState("https://jsonplaceholder.typicode.com/users");
   const [body, setBody] = useState<string>(
     '{\n  "title": "Test",\n  "body": "Content",\n  "userId": 1\n}'
   );
-  const [savedRequests, setSavedRequests] =
-    useState<SavedRequest[]>(MOCK_SAVED_REQUESTS);
-  const [selectedId, setSelectedId] = useState<number | null>(
-    MOCK_SAVED_REQUESTS[0]?.id ?? null
-  );
+
+  const [savedRequests, setSavedRequests] = useState<SavedRequest[]>([]);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
   const [isSending, setIsSending] = useState(false);
   const [responseStatus, setResponseStatus] = useState<string | null>(null);
   const [responseTime, setResponseTime] = useState<number | null>(null);
   const [responseBody, setResponseBody] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSend = async () => {
-    setIsSending(true);
-    setResponseStatus(null);
-    setResponseTime(null);
-    setResponseBody(null);
-    setError(null);
-
-    const start = performance.now();
-
+  // ---------------------------
+  // Saved Requests API
+  // ---------------------------
+  const fetchSavedRequests = async () => {
     try {
-      const options: RequestInit = {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      };
+      const res = await fetch("/api/api-client/requests", {
+        method: "GET",
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const result = await res.json();
 
-      // POST/PUT 요청일 때만 body 추가
-      if (method === "POST" || method === "PUT") {
-        try {
-          options.body = JSON.stringify(safeParse(body));
-        } catch (e) {
-          setError("Invalid JSON in request body");
-          setIsSending(false);
-          return;
+      if (result.success) {
+        setSavedRequests(result.data);
+
+        // 최초 선택값 자동 세팅
+        if (result.data.length > 0 && selectedId == null) {
+          const first = result.data[0];
+          setSelectedId(first.id);
+          setMethod(first.method);
+          setUrl(first.url);
         }
       }
-
-      const response = await fetch(url, options);
-      const end = performance.now();
-      setResponseTime(Math.round(end - start));
-
-      setResponseStatus(`${response.status} ${response.statusText}`);
-
-      const contentType = response.headers.get("content-type");
-      let data;
-
-      if (contentType?.includes("application/json")) {
-        data = await response.json();
-        setResponseBody(JSON.stringify(data, null, 2));
-      } else {
-        data = await response.text();
-        setResponseBody(data);
-      }
-    } catch (err) {
-      const end = performance.now();
-      setResponseTime(Math.round(end - start));
-      setError(err instanceof Error ? err.message : "Unknown error occurred");
-      setResponseStatus("Error");
-    } finally {
-      setIsSending(false);
+    } catch (e) {
+      console.error("❌ Failed to load saved requests:", e);
     }
   };
 
-  const handleSave = () => {
-    const id = Date.now();
-    const name = `${method} ${new URL(url).pathname}`;
-    const newReq: SavedRequest = { id, name, method, url };
-    setSavedRequests((prev) => [newReq, ...prev]);
-    setSelectedId(id);
+  useEffect(() => {
+    fetchSavedRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      const res = await fetch("/api/api-client/requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ method, url }),
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const result = await res.json();
+
+      if (result.success) {
+        const newReq: SavedRequest = result.data;
+        setSavedRequests((prev) => [newReq, ...prev]);
+        setSelectedId(newReq.id);
+      }
+    } catch (e) {
+      console.error("❌ Failed to save request:", e);
+    }
   };
 
-  const handleDelete = (id: number) => {
-    setSavedRequests((prev) => prev.filter((r) => r.id !== id));
-    if (selectedId === id) {
-      setSelectedId(null);
+  const handleDelete = async (id: number) => {
+    try {
+      const res = await fetch(`/api/api-client/requests?id=${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const result = await res.json();
+
+      if (result.success) {
+        setSavedRequests((prev) => prev.filter((r) => r.id !== id));
+        if (selectedId === id) setSelectedId(null);
+      }
+    } catch (e) {
+      console.error("❌ Failed to delete request:", e);
     }
   };
 
@@ -123,6 +104,61 @@ export default function ApiClientPage() {
     setSelectedId(req.id);
     setMethod(req.method);
     setUrl(req.url);
+  };
+
+  // ---------------------------
+  // Send Proxy API
+  // ---------------------------
+  const handleSend = async () => {
+    setIsSending(true);
+    setResponseStatus(null);
+    setResponseTime(null);
+    setResponseBody(null);
+    setError(null);
+
+    try {
+      // body 처리: POST/PUT만
+      let parsedBody: any = undefined;
+
+      if (method === "POST" || method === "PUT") {
+        try {
+          parsedBody = safeParse(body);
+        } catch {
+          setError("Invalid JSON in request body");
+          setIsSending(false);
+          return;
+        }
+      }
+
+      const res = await fetch("/api/api-client/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          method,
+          url,
+          body: parsedBody,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!result.success) {
+        setError(result.error ?? "Request failed");
+        setResponseStatus("Error");
+        setResponseTime(result.elapsedMs ?? null);
+        setIsSending(false);
+        return;
+      }
+
+      setResponseTime(result.elapsedMs ?? null);
+      setResponseStatus(`${result.status} ${result.statusText}`);
+      setResponseBody(result.body || "");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error occurred");
+      setResponseStatus("Error");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
