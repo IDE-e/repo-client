@@ -44,31 +44,32 @@ function seedBrokers(): BrokerEntry[] {
   }));
 }
 
+function wobbleList(list: BrokerEntry[]) {
+  const wobble = (v: number, range: number, min = 0, max = 100) =>
+    Math.max(min, Math.min(max, Math.round(v + (Math.random() - 0.5) * range)));
+
+  list.forEach((b) => {
+    b.cpu = wobble(b.cpu, 10);
+    b.memory = wobble(b.memory, 8);
+    b.disk = wobble(b.disk, 4);
+    b.networkIn = Math.max(0, wobble(b.networkIn, 6, 0, 9999));
+    b.networkOut = Math.max(0, wobble(b.networkOut, 6, 0, 9999));
+
+    const r = Math.random();
+    if (r < 0.03) b.status = "DEGRADED";
+    else if (r < 0.035) b.status = "OFFLINE";
+    else b.status = "ONLINE";
+
+    b.updatedAt = new Date().toISOString();
+  });
+}
+
 if (!g.__mockBrokers) g.__mockBrokers = seedBrokers();
 
 if (!g.__mockBrokersTimer) {
   g.__mockBrokersTimer = setInterval(() => {
     const list = g.__mockBrokers!;
-    const wobble = (v: number, range: number, min = 0, max = 100) =>
-      Math.max(
-        min,
-        Math.min(max, Math.round(v + (Math.random() - 0.5) * range))
-      );
-
-    list.forEach((b) => {
-      b.cpu = wobble(b.cpu, 10);
-      b.memory = wobble(b.memory, 8);
-      b.disk = wobble(b.disk, 4);
-      b.networkIn = Math.max(0, wobble(b.networkIn, 6, 0, 9999));
-      b.networkOut = Math.max(0, wobble(b.networkOut, 6, 0, 9999));
-
-      const r = Math.random();
-      if (r < 0.03) b.status = "DEGRADED";
-      else if (r < 0.035) b.status = "OFFLINE";
-      else b.status = "ONLINE";
-
-      b.updatedAt = new Date().toISOString();
-    });
+    wobbleList(list);
   }, 4000);
 }
 
