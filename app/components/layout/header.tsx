@@ -4,10 +4,12 @@ import Image from "next/image";
 import icon from "@/app/images/icon/logo96.png";
 import { MENU_DEFS, MenuAction, MenuId, MenuItem } from "@/app/types/menu";
 import { useRouter } from "next/navigation";
+import { useFileTreeStore } from "@/app/store/useFileTreeStore";
 
 export function VSCodeHeader() {
   const headerRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
+  const addNode = useFileTreeStore((s) => s.addNode);
   const [activeMenu, setActiveMenu] = useState<MenuId | null>(null);
 
   // 바깥 클릭 시 드롭다운 닫기
@@ -37,6 +39,7 @@ export function VSCodeHeader() {
     newFile: () => {
       console.log("New File");
       router.push("/untitled-1");
+      addNode(["src", "pages", "untitled-1.tsx"]);
     },
     openFile: () => console.log("Open File"),
     openFolder: () => console.log("Open Folder"),
