@@ -6,6 +6,7 @@ import { FileNode } from "../types/menu";
 type FileTreeState = {
   tree: FileTree;
   reset: () => void;
+  addNode: (path: string[]) => void;
   deleteNode: (path: string[]) => void;
 };
 
@@ -34,6 +35,46 @@ export const useFileTreeStore = create<FileTreeState>()(
 
       reset: () => set({ tree: INITIAL_FILE_TREE }),
 
+      addNode: (path) =>
+        set((state) => {
+          if (!path.length) return state;
+
+          const tree = cloneTree(state.tree);
+          const parentPath = path.slice(0, -1);
+          const name = path[path.length - 1];
+
+          // 부모 폴더 children 찾기
+          const parentChildren =
+            parentPath.length === 0 ? tree : getChildrenRef(tree, parentPath);
+
+          if (!parentChildren) {
+            console.warn("parent folder not found for addNode:", path);
+            return state;
+          }
+
+          // 이미 같은 이름 있으면 추가 안 함 (원하면 덮어쓰기도 가능)
+          if (parentChildren[name]) {
+            console.warn("node already exists:", path);
+            return state;
+          }
+
+          // 간단 규칙: . 이 있으면 파일, 없으면 폴더로 취급
+          const isFolder = !name.includes(".");
+
+          parentChildren[name] = isFolder
+            ? {
+                type: "folder",
+                children: {},
+              }
+            : {
+                type: "file",
+                // route는 나중에 따로 세팅할 수 있음
+              };
+
+          console.log("after addNode:", tree);
+          return { tree };
+        }),
+
       deleteNode: (path) =>
         set((state) => {
           console.log("deleteNode called with path:", path);
@@ -59,9 +100,8 @@ export const useFileTreeStore = create<FileTreeState>()(
         }),
     }),
     {
-      name: "ide-file-tree", // 🔹 localStorage key
+      name: "ide-file-tree",
       storage: createJSONStorage(() => localStorage),
-      // partialize: (state) => ({ tree: state.tree }),
     }
   )
 );
