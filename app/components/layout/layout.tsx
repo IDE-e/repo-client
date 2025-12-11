@@ -24,6 +24,8 @@ export default function VSCodeLayout({ children }: VSCodeLayoutProps) {
   const trimmedLabel =
     rawPathname === "/" ? "home" : rawPathname.replace(/^\/+/, "");
 
+  const isFullEditorPage = rawPathname === "/untitled-1";
+
   useEffect(() => {
     openTab(rawPathname, trimmedLabel);
   }, [rawPathname, trimmedLabel, openTab]);
@@ -97,8 +99,14 @@ export default function VSCodeLayout({ children }: VSCodeLayoutProps) {
           </div>
 
           {/* Editor Content */}
-          <div className="flex-1 overflow-auto p-5 bg-bg-dark custom-scrollbar">
-            <div className="max-w-4xl w-full">{children}</div>
+          <div className="flex-1 overflow-auto bg-bg-dark custom-scrollbar">
+            <div
+              className={
+                isFullEditorPage ? "w-full h-full" : "max-w-4xl w-full p-5"
+              }
+            >
+              {children}
+            </div>
           </div>
 
           {isTerminalOpen && <Terminal />}
