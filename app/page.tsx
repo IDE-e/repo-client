@@ -1,8 +1,11 @@
 "use client";
 
 import { FileText, GitBranch, Folder, Settings, Box } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function WelcomePage() {
+  const route = useRouter();
+
   return (
     <>
       <h1 className="text-4xl font-bold mb-6 text-text-default">Welcome</h1>
@@ -11,7 +14,12 @@ export default function WelcomePage() {
         <div>
           <h2 className="text-xl font-semibold mb-3 text-point">Start</h2>
           <div className="space-y-2 text-sm">
-            <div className="flex items-center gap-2 text-text-default hover:text-white cursor-pointer">
+            <div
+              className="flex items-center gap-2 text-text-default hover:text-white cursor-pointer"
+              onClick={() => {
+                route.push("/untitled-1");
+              }}
+            >
               <FileText size={14} className="text-point" />
               <span>New File...</span>
             </div>
