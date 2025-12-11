@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Search, Play, Star, Download } from "lucide-react";
 import Image from "next/image";
 import FileTreeItem from "./fileTreeItem";
@@ -11,55 +11,18 @@ import {
   GIT_HISTORY,
   SIDEBAR_ICONS,
 } from "@/app/data/mock/menu";
-import { FileNode } from "@/app/types/menu";
+import { useFileTreeStore } from "@/app/store/useFileTreeStore";
+import { useVSCodeTabsStore } from "@/app/store/useVSCodeTabsStore";
 
-const fileTree: Record<string, FileNode> = {
-  src: {
-    type: "folder",
-    children: {
-      pages: {
-        type: "folder",
-        children: {
-          // "welcome.tsx": { type: "file", route: "/welcome" },
-          "alerts.tsx": { type: "file", route: "/alerts" },
-          "api-client.tsx": { type: "file", route: "/api-client" },
-          "dashboard.tsx": { type: "file", route: "/dashboard" },
-          "brokers.tsx": { type: "file", route: "/brokers" },
-          "cluster.tsx": { type: "file", route: "/cluster" },
-          "topics.tsx": { type: "file", route: "/topics" },
-          "health.tsx": { type: "file", route: "/health" },
-          "diff-viewer.tsx": { type: "file", route: "/diff-viewer" },
-          "log-explorer.tsx": { type: "file", route: "/log-explorer" },
-          "metrics.tsx": { type: "file", route: "/metrics" },
-          "gallery.tsx": { type: "file", route: "/gallery" },
-          "logs.tsx": { type: "file", route: "/logs" },
-          "markdown.tsx": { type: "file", route: "/markdown" },
-          "settings.tsx": { type: "file", route: "/settings" },
-          "terminal.tsx": { type: "file", route: "/terminal" },
-          "vs-demo.tsx": { type: "file", route: "/vs-demo" },
-        },
-      },
-      components: {
-        type: "folder",
-        children: {
-          "Header.tsx": { type: "file" },
-        },
-      },
-      "App.tsx": { type: "file" },
-      "index.js": { type: "file" },
-    },
-  },
-  public: {
-    type: "folder",
-    children: {
-      "index.html": { type: "file" },
-    },
-  },
-  "package.json": { type: "file" },
-  "README.md": { type: "file" },
-};
-
+/**
+ * 좌측 메뉴 컴포넌트
+ * @returns
+ */
 export function VSCodeLeftMenu() {
+  const tree = useFileTreeStore((s) => s.tree);
+  const deleteNode = useFileTreeStore((s) => s.deleteNode);
+  const closeTab = useVSCodeTabsStore((s) => s.closeTab);
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [activeSidebar, setActiveSidebar] = useState<string>("explorer");
   const [expandedFolders, setExpandedFolders] = useState<
@@ -70,6 +33,7 @@ export function VSCodeLeftMenu() {
   });
 
   const router = useRouter();
+  const pathname = usePathname() || "/";
 
   const toggleFolder = (folder: string) => {
     setExpandedFolders((prev) => ({
@@ -78,7 +42,7 @@ export function VSCodeLeftMenu() {
     }));
   };
 
-  // 아이콘 클릭: 같은 아이콘 다시 클릭하면 접기/펼치기 토글, 다른 아이콘 클릭 시 해당 메뉴 활성 + 패널 열기
+  // 아이콘 클릭
   const handleIconClick = (id: string) => {
     if (id === activeSidebar) {
       setSidebarCollapsed((prev) => !prev);
@@ -90,6 +54,22 @@ export function VSCodeLeftMenu() {
 
   const handleFileClick = (route: string) => {
     router.push(route);
+  };
+
+  // 파일 삭제 + 탭 삭제 + 라우팅까지 한 번에
+  const handleDelete = (path: string[], route?: string) => {
+    // 1) 파일 트리에서 삭제
+    deleteNode(path);
+
+    // 2) 매핑된 route가 있는 경우에만 탭/라우팅 처리
+    if (route) {
+      const next = closeTab(route);
+
+      // 3) 지금 보고 있는 페이지가 이 파일이었다면
+      if (pathname === route) {
+        router.push(next ?? "/");
+      }
+    }
   };
 
   const activeMeta =
@@ -105,14 +85,17 @@ export function VSCodeLeftMenu() {
               <div className="text-xs text-text-default font-semibold mb-1 uppercase px-2">
                 Project
               </div>
-              {Object.entries(fileTree).map(([name, item]) => (
+              {Object.entries(tree).map(([name, item]) => (
                 <FileTreeItem
                   key={name}
                   name={name}
                   item={item}
+                  depth={0}
+                  path={[name]}
                   expandedFolders={expandedFolders}
                   toggleFolder={toggleFolder}
                   onFileClick={handleFileClick}
+                  onDelete={handleDelete}
                 />
               ))}
             </div>
