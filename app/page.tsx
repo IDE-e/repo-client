@@ -1,8 +1,13 @@
 "use client";
 
 import { FileText, GitBranch, Folder, Settings, Box } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useFileTreeStore } from "./store/useFileTreeStore";
 
 export default function WelcomePage() {
+  const router = useRouter();
+  const addNode = useFileTreeStore((s) => s.addNode);
+
   return (
     <>
       <h1 className="text-4xl font-bold mb-6 text-text-default">Welcome</h1>
@@ -11,7 +16,13 @@ export default function WelcomePage() {
         <div>
           <h2 className="text-xl font-semibold mb-3 text-point">Start</h2>
           <div className="space-y-2 text-sm">
-            <div className="flex items-center gap-2 text-text-default hover:text-white cursor-pointer">
+            <div
+              className="flex items-center gap-2 text-text-default hover:text-white cursor-pointer"
+              onClick={() => {
+                router.push("/untitled-1");
+                addNode(["src", "pages", "untitled-1.tsx"]);
+              }}
+            >
               <FileText size={14} className="text-point" />
               <span>New File...</span>
             </div>

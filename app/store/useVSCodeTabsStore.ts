@@ -1,11 +1,9 @@
-"use client";
-
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
 type VSTab = {
-  path: string; // 실제 라우터 경로 ("/", "/about", "/docs/intro" 등)
-  label: string; // 탭에 보여줄 이름 ("home", "about", "intro" 등)
+  path: string;
+  label: string;
 };
 
 type VSCodeTabsState = {
@@ -13,7 +11,7 @@ type VSCodeTabsState = {
   activePath: string | null;
 
   openTab: (path: string, label?: string) => void;
-  closeTab: (path: string) => string | null; // 닫은 후 next active path 반환
+  closeTab: (path: string) => string | null; // 닫은 뒤 이동할 경로(탭 path) 반환
   setActiveTab: (path: string) => void;
 };
 
@@ -42,15 +40,26 @@ export const useVSCodeTabsStore = create<VSCodeTabsState>()(
 
       closeTab: (path) => {
         const { tabs, activePath } = get();
+
+        const index = tabs.findIndex((t) => t.path === path);
+        // 삭제할 탭이 없으면 아무 변화 없음
+        if (index === -1) return activePath;
+
         const filtered = tabs.filter((t) => t.path !== path);
 
         let nextActive: string | null = activePath;
 
-        // 지금 닫은 탭이 active였다면, 마지막 탭을 active로
         if (activePath === path) {
-          nextActive = filtered.length
-            ? filtered[filtered.length - 1].path
-            : null;
+          if (filtered.length === 0) {
+            // 더 이상 탭이 없으면 activePath는 null
+            nextActive = null;
+          } else if (index < filtered.length) {
+            // 닫은 탭 오른쪽 탭으로
+            nextActive = filtered[index].path;
+          } else {
+            // 닫은 탭이 마지막이었다면, 새 마지막 탭으로
+            nextActive = filtered[filtered.length - 1].path;
+          }
         }
 
         set({
@@ -58,6 +67,7 @@ export const useVSCodeTabsStore = create<VSCodeTabsState>()(
           activePath: nextActive,
         });
 
+        // 라우터가 이동할 "다음 경로" (탭 path)를 반환
         return nextActive;
       },
 
@@ -66,9 +76,8 @@ export const useVSCodeTabsStore = create<VSCodeTabsState>()(
       },
     }),
     {
-      name: "vscode-tabs-store", // localStorage key
+      name: "vscode-tabs-store",
       storage: createJSONStorage(() => localStorage),
-      // 필요한 값만 저장하고 싶으면 아래처럼 partialize 사용
       partialize: (state) => ({
         tabs: state.tabs,
         activePath: state.activePath,

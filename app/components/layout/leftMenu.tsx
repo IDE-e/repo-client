@@ -1,288 +1,29 @@
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import {
-  Search,
-  FileCode,
-  GitBranch,
-  Box,
-  Bug,
-  ChevronRight,
-  ChevronDown,
-  Folder,
-  File as FileIconDefault,
-  FileJson,
-  FileText,
-  FileCode2,
-  BookOpen,
-  Play,
-  Star,
-  Download,
-} from "lucide-react";
-import extentionIcon1 from "@/app/images/icon/crop.png";
-import extentionIcon2 from "@/app/images/icon/leaderboard.png";
-import extentionIcon3 from "@/app/images/icon/mask.png";
-import extentionIcon4 from "@/app/images/icon/vector.png";
+import { usePathname, useRouter } from "next/navigation";
+import { Search, Play, Star, Download } from "lucide-react";
 import Image from "next/image";
+import FileTreeItem from "./fileTreeItem";
+import {
+  DEBUG_BREAKPOINTS,
+  DEBUG_CONFIGS,
+  EXTENTION,
+  GIT_CHANGE,
+  GIT_HISTORY,
+  SIDEBAR_ICONS,
+} from "@/app/data/mock/menu";
+import { useFileTreeStore } from "@/app/store/useFileTreeStore";
+import { useVSCodeTabsStore } from "@/app/store/useVSCodeTabsStore";
 
-type FileNode =
-  | {
-      type: "folder";
-      children: Record<string, FileNode>;
-    }
-  | {
-      type: "file";
-      route?: string;
-    };
-
-const sidebarIcons = [
-  { icon: FileCode, label: "Explorer", id: "explorer" },
-  { icon: Search, label: "Search", id: "search" },
-  { icon: GitBranch, label: "Source Control", id: "git" },
-  { icon: Bug, label: "Run and Debug", id: "debug" },
-  { icon: Box, label: "Extensions", id: "extensions" },
-];
-
-const fileTree: Record<string, FileNode> = {
-  src: {
-    type: "folder",
-    children: {
-      pages: {
-        type: "folder",
-        children: {
-          // "welcome.tsx": { type: "file", route: "/welcome" },
-          "alerts.tsx": { type: "file", route: "/alerts" },
-          "api-client.tsx": { type: "file", route: "/api-client" },
-          "dashboard.tsx": { type: "file", route: "/dashboard" },
-          "brokers.tsx": { type: "file", route: "/brokers" },
-          "cluster.tsx": { type: "file", route: "/cluster" },
-          "topics.tsx": { type: "file", route: "/topics" },
-          "health.tsx": { type: "file", route: "/health" },
-          "diff-viewer.tsx": { type: "file", route: "/diff-viewer" },
-          "log-explorer.tsx": { type: "file", route: "/log-explorer" },
-          "metrics.tsx": { type: "file", route: "/metrics" },
-          "gallery.tsx": { type: "file", route: "/gallery" },
-          "logs.tsx": { type: "file", route: "/logs" },
-          "markdown.tsx": { type: "file", route: "/markdown" },
-          "settings.tsx": { type: "file", route: "/settings" },
-          "terminal.tsx": { type: "file", route: "/terminal" },
-          "vs-demo.tsx": { type: "file", route: "/vs-demo" },
-        },
-      },
-      components: {
-        type: "folder",
-        children: {
-          "Header.tsx": { type: "file" },
-        },
-      },
-      "App.tsx": { type: "file" },
-      "index.js": { type: "file" },
-    },
-  },
-  public: {
-    type: "folder",
-    children: {
-      "index.html": { type: "file" },
-    },
-  },
-  "package.json": { type: "file" },
-  "README.md": { type: "file" },
-};
-
-const mockGitChanges = [
-  {
-    file: "header.tsx",
-    path: "apps/web/app/components/header.tsx",
-    status: "M",
-  },
-  {
-    file: "leftMenu.tsx",
-    path: "apps/web/app/components/leftMenu.tsx",
-    status: "M",
-  },
-];
-
-const mockGitHistory = [
-  {
-    message: "fix: Rename header component",
-    author: "yeonii20",
-    timeAgo: "2 hours ago",
-    branch: "feature/design",
-    isHead: true,
-  },
-  {
-    message: "feat: Apply terminal component",
-    author: "yeonii20",
-    timeAgo: "5 hours ago",
-  },
-  {
-    message: "style: tailwind css lint",
-    author: "Suyoooi",
-    timeAgo: "1 day ago",
-  },
-  {
-    message: "Merge pull request #23 from origin/main",
-    author: "CI",
-    timeAgo: "2 days ago",
-    tag: "origin/main",
-  },
-];
-
-const mockDebugConfigs = [
-  {
-    name: "Launch Web (Next.js)",
-    request: "launch",
-  },
-  {
-    name: "Attach to Node.js server",
-    request: "attach",
-  },
-];
-
-const mockDebugBreakpoints = [
-  {
-    file: "apps/web/app/pages/api-client.tsx",
-    line: 42,
-    enabled: true,
-  },
-  {
-    file: "apps/web/app/pages/terminal.tsx",
-    line: 88,
-    enabled: false,
-  },
-];
-
-const mockExtensions = [
-  {
-    id: "theme-pack",
-    name: "VS Theme Pack",
-    author: "Team VS",
-    description: "A collection of popular dark and light themes.",
-    icon: extentionIcon1,
-    rating: 4.8,
-    downloads: "120k",
-    installed: true,
-    enabled: true,
-  },
-  {
-    id: "eslint",
-    name: "ESLint",
-    author: "Dirk B.",
-    description: "Integrates ESLint JavaScript into your editor.",
-    icon: extentionIcon2,
-    rating: 4.6,
-    downloads: "3.5M",
-    installed: true,
-    enabled: true,
-  },
-  {
-    id: "prettier",
-    name: "Prettier",
-    author: "Prettier",
-    description: "An opinionated code formatter for multiple languages.",
-    icon: extentionIcon3,
-    rating: 4.7,
-    downloads: "6.1M",
-    installed: true,
-    enabled: true,
-  },
-  {
-    id: "gitlens",
-    name: "GitLens",
-    author: "GitKraken",
-    description: "Supercharge the Git capabilities built into your editor.",
-    icon: extentionIcon4,
-    rating: 4.9,
-    downloads: "15M",
-    installed: false,
-    enabled: false,
-  },
-];
-
-// 파일 이름에 따라 아이콘 매핑
-const getFileIcon = (name: string) => {
-  const lower = name.toLowerCase();
-
-  if (lower === "package.json") return FileJson;
-  if (lower === "readme.md") return BookOpen;
-
-  if (/\.(tsx|jsx|ts|js)$/.test(lower)) return FileCode2;
-  if (/\.(md|mdx)$/.test(lower)) return FileText;
-
-  return FileIconDefault;
-};
-
-interface FileTreeItemProps {
-  name: string;
-  item: FileNode;
-  depth?: number;
-  expandedFolders: Record<string, boolean>;
-  toggleFolder: (folder: string) => void;
-  onFileClick: (route: string) => void;
-}
-
-const FileTreeItem = ({
-  name,
-  item,
-  depth = 0,
-  expandedFolders,
-  toggleFolder,
-  onFileClick,
-}: FileTreeItemProps) => {
-  const isExpanded = expandedFolders[name];
-
-  if (item.type === "folder") {
-    return (
-      <div>
-        <div
-          className="flex items-center gap-1 px-2 py-0.5 hover:bg-bg-hover cursor-pointer text-sm"
-          style={{ paddingLeft: `${depth * 12 + 8}px` }}
-          onClick={() => toggleFolder(name)}
-        >
-          {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-          <Folder size={14} className="text-text-dark" />
-          <span className="text-text-default">{name}</span>
-        </div>
-        {isExpanded && "children" in item && item.children && (
-          <div>
-            {Object.entries(item.children).map(([childName, childItem]) => (
-              <FileTreeItem
-                key={childName}
-                name={childName}
-                item={childItem}
-                depth={depth + 1}
-                expandedFolders={expandedFolders}
-                toggleFolder={toggleFolder}
-                onFileClick={onFileClick}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  const Icon = getFileIcon(name);
-
-  return (
-    <div
-      className="flex items-center gap-1 px-2 py-0.5 hover:bg-bg-hover cursor-pointer text-sm"
-      style={{ paddingLeft: `${depth * 12 + 20}px` }}
-      onClick={() => {
-        if (item.route) {
-          onFileClick(item.route);
-        } else {
-          console.log("no route mapped for", name);
-        }
-      }}
-    >
-      <Icon size={14} className="text-text-dark" />
-      <span className="text-text-default">{name}</span>
-    </div>
-  );
-};
-
+/**
+ * 좌측 메뉴 컴포넌트
+ * @returns
+ */
 export function VSCodeLeftMenu() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const tree = useFileTreeStore((s) => s.tree);
+  const deleteNode = useFileTreeStore((s) => s.deleteNode);
+  const closeTab = useVSCodeTabsStore((s) => s.closeTab);
+
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [activeSidebar, setActiveSidebar] = useState<string>("explorer");
   const [expandedFolders, setExpandedFolders] = useState<
     Record<string, boolean>
@@ -292,6 +33,7 @@ export function VSCodeLeftMenu() {
   });
 
   const router = useRouter();
+  const pathname = usePathname() || "/";
 
   const toggleFolder = (folder: string) => {
     setExpandedFolders((prev) => ({
@@ -300,7 +42,7 @@ export function VSCodeLeftMenu() {
     }));
   };
 
-  // 아이콘 클릭: 같은 아이콘 다시 클릭하면 접기/펼치기 토글, 다른 아이콘 클릭 시 해당 메뉴 활성 + 패널 열기
+  // 아이콘 클릭
   const handleIconClick = (id: string) => {
     if (id === activeSidebar) {
       setSidebarCollapsed((prev) => !prev);
@@ -314,8 +56,24 @@ export function VSCodeLeftMenu() {
     router.push(route);
   };
 
+  // 파일 삭제 + 탭 삭제 + 라우팅까지 한 번에
+  const handleDelete = (path: string[], route?: string) => {
+    // 1) 파일 트리에서 삭제
+    deleteNode(path);
+
+    // 2) 매핑된 route가 있는 경우에만 탭/라우팅 처리
+    if (route) {
+      const next = closeTab(route);
+
+      // 3) 지금 보고 있는 페이지가 이 파일이었다면
+      if (pathname === route) {
+        router.push(next ?? "/");
+      }
+    }
+  };
+
   const activeMeta =
-    sidebarIcons.find((item) => item.id === activeSidebar) ?? sidebarIcons[0];
+    SIDEBAR_ICONS.find((item) => item.id === activeSidebar) ?? SIDEBAR_ICONS[0];
 
   // 오른쪽 패널 내용 스위칭
   const renderSidebarContent = () => {
@@ -327,14 +85,17 @@ export function VSCodeLeftMenu() {
               <div className="text-xs text-text-default font-semibold mb-1 uppercase px-2">
                 Project
               </div>
-              {Object.entries(fileTree).map(([name, item]) => (
+              {Object.entries(tree).map(([name, item]) => (
                 <FileTreeItem
                   key={name}
                   name={name}
                   item={item}
+                  depth={0}
+                  path={[name]}
                   expandedFolders={expandedFolders}
                   toggleFolder={toggleFolder}
                   onFileClick={handleFileClick}
+                  onDelete={handleDelete}
                 />
               ))}
             </div>
@@ -378,12 +139,12 @@ export function VSCodeLeftMenu() {
               {/* CHANGES 헤더 */}
               <div className="flex items-center justify-between px-3 py-2 text-[11px] text-text-soft font-semibold uppercase">
                 <span>Changes</span>
-                <span className="text-text-deep">{mockGitChanges.length}</span>
+                <span className="text-text-deep">{GIT_CHANGE.length}</span>
               </div>
 
               {/* Changes 리스트 */}
               <div>
-                {mockGitChanges.map((change) => (
+                {GIT_CHANGE.map((change) => (
                   <div
                     key={change.file}
                     className="flex items-center justify-between px-3 py-1.5 hover:bg-bg-hover cursor-pointer text-[11px]"
@@ -413,7 +174,7 @@ export function VSCodeLeftMenu() {
                   History
                 </div>
                 <div className="px-3 pb-3">
-                  {mockGitHistory.map((item, index) => (
+                  {GIT_HISTORY.map((item, index) => (
                     <div
                       key={`${item.message}-${index}`}
                       className="flex items-start gap-2 text-[10px] text-text-soft"
@@ -425,7 +186,7 @@ export function VSCodeLeftMenu() {
                             item.isHead ? "bg-blue-500" : "bg-text-soft"
                           }`}
                         />
-                        {index < mockGitHistory.length - 1 && (
+                        {index < GIT_HISTORY.length - 1 && (
                           <div className="w-px flex-1 bg-border-default mt-0.5" />
                         )}
                       </div>
@@ -468,7 +229,7 @@ export function VSCodeLeftMenu() {
                 <Play size={13} className="translate-x-[1px]" />
               </button>
               <select className="flex-1 bg-bg-dark border border-border-default rounded-sm px-2 py-1 text-[11px] outline-none focus:border-blue-500">
-                {mockDebugConfigs.map((cfg) => (
+                {DEBUG_CONFIGS.map((cfg) => (
                   <option key={cfg.name}>{cfg.name}</option>
                 ))}
               </select>
@@ -479,7 +240,7 @@ export function VSCodeLeftMenu() {
               Run and Debug
             </div>
             <div className="px-2 pb-2 flex flex-col gap-1">
-              {mockDebugConfigs.map((cfg) => (
+              {DEBUG_CONFIGS.map((cfg) => (
                 <button
                   key={cfg.name}
                   className="w-full flex items-center justify-between px-2 py-1.5 rounded-[3px] hover:bg-bg-hover text-[11px] text-text-soft"
@@ -501,7 +262,7 @@ export function VSCodeLeftMenu() {
                 Breakpoints
               </div>
               <div className="px-3 pb-3 space-y-1">
-                {mockDebugBreakpoints.map((bp) => (
+                {DEBUG_BREAKPOINTS.map((bp) => (
                   <label
                     key={`${bp.file}-${bp.line}`}
                     className="flex items-center gap-2 text-[11px] text-text-soft cursor-pointer hover:bg-bg-hover/40 rounded-[3px] px-1 py-[2px]"
@@ -517,7 +278,7 @@ export function VSCodeLeftMenu() {
                     </span>
                   </label>
                 ))}
-                {mockDebugBreakpoints.length === 0 && (
+                {DEBUG_BREAKPOINTS.length === 0 && (
                   <div className="text-[10px] text-text-soft">
                     No breakpoints set.
                   </div>
@@ -551,7 +312,7 @@ export function VSCodeLeftMenu() {
 
             {/* 확장 목록 */}
             <div className="flex-1 overflow-auto pb-3">
-              {mockExtensions.map((ext) => (
+              {EXTENTION.map((ext) => (
                 <div
                   key={ext.id}
                   className="px-3 py-2 hover:bg-bg-hover cursor-pointer flex gap-2"
@@ -643,7 +404,7 @@ export function VSCodeLeftMenu() {
     <>
       {/* Left Sidebar - Icon Bar */}
       <div className="w-12 bg-[#333333] border-r border-border-default flex flex-col items-center py-2 gap-4">
-        {sidebarIcons.map((item) => {
+        {SIDEBAR_ICONS.map((item) => {
           const Icon = item.icon;
           const isActive = activeSidebar === item.id;
 

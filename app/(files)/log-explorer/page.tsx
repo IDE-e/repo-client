@@ -39,8 +39,8 @@ export default function LogExplorerPage() {
   const fetchLogs = async () => {
     setIsLoading(true);
     try {
-      console.log("🔍 Fetching logs from /api/logs");
-      const response = await fetch("/api/logs");
+      console.log("🔍 Fetching logs from /api/log-explorer");
+      const response = await fetch("/api/log-explorer");
 
       console.log("📡 Response status:", response.status);
       console.log("📡 Response headers:", response.headers.get("content-type"));
@@ -74,7 +74,7 @@ export default function LogExplorerPage() {
   // 새 로그 추가 (API 호출)
   const addLog = async (level: LogLevel, message: string) => {
     try {
-      const response = await fetch("/api/logs", {
+      const response = await fetch("/api/log-explorer", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -99,7 +99,7 @@ export default function LogExplorerPage() {
   // 모든 로그 삭제
   const clearLogs = async () => {
     try {
-      const response = await fetch("/api/logs", {
+      const response = await fetch("/api/log-explorer", {
         method: "DELETE",
       });
 

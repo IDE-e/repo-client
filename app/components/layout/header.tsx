@@ -2,67 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { Search, Settings, User } from "lucide-react";
 import Image from "next/image";
 import icon from "@/app/images/icon/logo96.png";
-
-type MenuId =
-  | "file"
-  | "edit"
-  | "selection"
-  | "view"
-  | "go"
-  | "run"
-  | "terminal"
-  | "help";
-
-const MENU_DEFS: {
-  id: MenuId;
-  label: string;
-  items: string[];
-}[] = [
-  {
-    id: "file",
-    label: "File",
-    items: ["New File", "Open File...", "Open Folder...", "Save", "Save All"],
-  },
-  {
-    id: "edit",
-    label: "Edit",
-    items: ["Undo", "Redo", "Cut", "Copy", "Paste"],
-  },
-  {
-    id: "selection",
-    label: "Selection",
-    items: ["Select All", "Expand Selection", "Shrink Selection"],
-  },
-  {
-    id: "view",
-    label: "View",
-    items: ["Command Palette...", "Appearance", "Explorer", "Extensions"],
-  },
-  {
-    id: "go",
-    label: "Go",
-    items: ["Back", "Forward", "Go to File...", "Go to Symbol..."],
-  },
-  {
-    id: "run",
-    label: "Run",
-    items: ["Run Without Debugging", "Start Debugging", "Run Task..."],
-  },
-  {
-    id: "terminal",
-    label: "Terminal",
-    items: ["New Terminal", "Split Terminal", "Run Task..."],
-  },
-  {
-    id: "help",
-    label: "Help",
-    items: ["Documentation", "Release Notes", "About"],
-  },
-];
+import { MENU_DEFS, MenuAction, MenuId, MenuItem } from "@/app/types/menu";
+import { useRouter } from "next/navigation";
+import { useFileTreeStore } from "@/app/store/useFileTreeStore";
 
 export function VSCodeHeader() {
-  const [activeMenu, setActiveMenu] = useState<MenuId | null>(null);
   const headerRef = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();
+  const addNode = useFileTreeStore((s) => s.addNode);
+  const [activeMenu, setActiveMenu] = useState<MenuId | null>(null);
 
   // 바깥 클릭 시 드롭다운 닫기
   useEffect(() => {
@@ -84,6 +32,32 @@ export function VSCodeHeader() {
 
   const toggleMenu = (id: MenuId) => {
     setActiveMenu((prev) => (prev === id ? null : id));
+  };
+
+  // 메뉴 액션 핸들러 맵
+  const actionHandlers: Record<MenuAction, () => void> = {
+    newFile: () => {
+      console.log("New File");
+      router.push("/untitled-1");
+      addNode(["src", "pages", "untitled-1.tsx"]);
+    },
+    openFile: () => console.log("Open File"),
+    openFolder: () => console.log("Open Folder"),
+    save: () => console.log("Save"),
+    saveAll: () => console.log("Save All"),
+    undo: () => console.log("Undo"),
+    redo: () => console.log("Redo"),
+    cut: () => console.log("Cut"),
+    copy: () => console.log("Copy"),
+    paste: () => console.log("Paste"),
+    commandPalette: () => console.log("Command Palette"),
+    about: () => console.log("About"),
+  };
+
+  const handleMenuItemClick = (item: MenuItem) => {
+    if (item.disabled) return;
+    actionHandlers[item.id]?.();
+    setActiveMenu(null);
   };
 
   return (
@@ -126,16 +100,24 @@ export function VSCodeHeader() {
                   <div className="absolute left-0 top-full mt-[2px] min-w-[180px] bg-[#252526] border border-border-default rounded-[2px] shadow-lg z-50">
                     {menu.items.map((item) => (
                       <button
-                        key={item}
+                        key={item.id}
                         type="button"
-                        className="w-full text-left px-3 py-[5px] text-[11px] text-text-soft hover:bg-[#094771] hover:text-white"
-                        // 실제 동작은 나중에 onClick에 붙이면 됨
-                        onClick={() => {
-                          // TODO: 메뉴 동작 연결
-                          setActiveMenu(null);
-                        }}
+                        disabled={item.disabled}
+                        className={[
+                          "w-full flex items-center justify-between gap-3",
+                          "px-3 py-[5px] text-[11px] text-text-soft",
+                          item.disabled
+                            ? "opacity-40 cursor-not-allowed"
+                            : "hover:bg-[#094771] hover:text-white",
+                        ].join(" ")}
+                        onClick={() => handleMenuItemClick(item)}
                       >
-                        {item}
+                        <span>{item.label}</span>
+                        {item.shortcut && (
+                          <span className="text-[10px] text-text-deep">
+                            {item.shortcut}
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>

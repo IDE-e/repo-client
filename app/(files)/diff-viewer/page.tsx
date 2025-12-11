@@ -1,13 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DiffEditor } from "@monaco-editor/react";
 import { SplitSquareVertical, Columns } from "lucide-react";
 
-export default function DiffViewerPage() {
-  const [mode, setMode] = useState<"split" | "inline">("split");
-
-  const oldCode = `
+const oldCodeVal = `
 import React from "react";
 
 export function Hello() {
@@ -15,13 +12,29 @@ export function Hello() {
 }
 `;
 
-  const newCode = `
+const newCodeVal = `
 import React from "react";
 
 export function Hello({ name }) {
   return <div>Hello {name}</div>;
 }
 `;
+
+export default function DiffViewerPage() {
+  const [mode, setMode] = useState<"split" | "inline">("split");
+  const [oldCode, setOldCode] = useState<string>(oldCodeVal);
+  const [newCode, setNewCode] = useState<string>(newCodeVal);
+
+  useEffect(() => {
+    (async () => {
+      const res = await fetch("/api/diff");
+      const json = await res.json();
+      if (json.success) {
+        setOldCode(json.data.original);
+        setNewCode(json.data.modified);
+      }
+    })();
+  }, []);
 
   return (
     <div className="flex flex-col gap-4 w-full h-full">

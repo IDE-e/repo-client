@@ -39,9 +39,9 @@ export default function AlertsPage() {
     ERROR: true,
     CRITICAL: true,
   });
-  const [showAck, setShowAck] = useState(true);
-  const [search, setSearch] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [showAck, setShowAck] = useState<boolean>(true);
+  const [search, setSearch] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const fetchAlerts = async () => {
     setIsLoading(true);
