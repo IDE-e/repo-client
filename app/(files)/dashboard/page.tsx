@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -42,18 +43,11 @@ type DashboardData = {
   };
 };
 
-/**
- * Build a safe base url for server-side fetch against same-origin API routes.
- * - Next 15: headers() is async.
- * - Uses host header first.
- * - Falls back to env if you later add it.
- */
 function getProtocol() {
   return process.env.NODE_ENV === "development" ? "http" : "https";
 }
 
 async function getBaseUrl() {
-  // Prefer explicit env if you ever add it later
   const envUrl =
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.SITE_URL ||
@@ -84,10 +78,7 @@ async function getDashboardData(): Promise<DashboardData> {
 
 export default async function DashboardPage() {
   const data = await getDashboardData();
-
   const { summary, tasks, activity, environment } = data;
-
-  console.log(data);
 
   const buildDot =
     summary.build.status === "Passing"
@@ -98,15 +89,27 @@ export default async function DashboardPage() {
 
   return (
     <main className="space-y-8">
-      {/* 제목 + 설명 */}
-      <section className="space-y-2">
-        <h1 className="text-3xl font-bold text-text-light">
-          Project Dashboard
-        </h1>
-        <p className="text-sm text-text-soft">
-          VS Code 스타일 레이아웃 안에서 프로젝트 상태와 작업 현황을 한눈에
-          확인할 수 있는 대시보드입니다.
-        </p>
+      {/* 제목 + 설명 + 데모 버튼 */}
+      <section className="flex items-start justify-between gap-4">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold text-text-light">
+            Project Dashboard
+          </h1>
+          <p className="text-sm text-text-soft">
+            VS Code 스타일 레이아웃 안에서 프로젝트 상태와 작업 현황을 한눈에
+            확인할 수 있는 대시보드입니다.
+          </p>
+        </div>
+
+        {/* 데모 페이지로 이동하는 버튼 */}
+        <Link
+          href="/demo/dashboard"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center rounded-md border border-border-default bg-bg-default px-3 py-1.5 text-xs font-medium text-text-light hover:bg-bg-hover transition"
+        >
+          Open dashboard demo
+        </Link>
       </section>
 
       {/* 상단 요약 카드들 */}

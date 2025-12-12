@@ -26,7 +26,7 @@ export default function VSCodeLayout({ children }: VSCodeLayoutProps) {
 
   const isFullEditorPage = rawPathname === "/untitled-1";
 
-  const isTestPage = rawPathname === "/test";
+  const isDemoPage = rawPathname.includes("/demo") || rawPathname === "/test";
 
   useEffect(() => {
     openTab(rawPathname, trimmedLabel);
@@ -35,17 +35,17 @@ export default function VSCodeLayout({ children }: VSCodeLayoutProps) {
   return (
     <div className="flex flex-col h-screen bg-bg-dark text-white font-mono">
       {/* Header */}
-      {!isTestPage && <VSCodeHeader />}
+      {!isDemoPage && <VSCodeHeader />}
 
       {/* 본문 영역 (LeftMenu + 에디터) */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Menu (아이콘 바 + Explorer) */}
-        {!isTestPage && <VSCodeLeftMenu />}
+        {!isDemoPage && <VSCodeLeftMenu />}
 
         {/* Main Content Area */}
-        {isTestPage ? (
+        {isDemoPage ? (
           <div className="flex-1 overflow-auto bg-bg-dark custom-scrollbar font-sans">
-            <div className="max-w-4xl w-full p-5">{children}</div>
+            <div className="max-w-8xl mx-auto w-full p-5">{children}</div>
           </div>
         ) : (
           <div className="flex-1 flex flex-col bg-bg-dark">
@@ -111,7 +111,7 @@ export default function VSCodeLayout({ children }: VSCodeLayoutProps) {
             <div className="flex-1 overflow-auto bg-bg-dark custom-scrollbar">
               <div
                 className={
-                  isFullEditorPage ? "w-full h-full" : "max-w-4xl w-full p-5"
+                  isFullEditorPage ? "w-full h-full" : "max-w-6xl w-full p-5"
                 }
               >
                 {children}
@@ -124,7 +124,7 @@ export default function VSCodeLayout({ children }: VSCodeLayoutProps) {
       </div>
 
       {/* Footer */}
-      {!isTestPage && <VSCodeFooter />}
+      {!isDemoPage && <VSCodeFooter />}
     </div>
   );
 }
