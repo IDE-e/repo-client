@@ -15,8 +15,8 @@ import { Line, Bar, Pie, Doughnut } from "react-chartjs-2";
 import "chartjs-adapter-date-fns";
 import { useEffect, useRef, useState } from "react";
 import { merge } from "lodash";
-import { addAlphaToHex } from "@/app/utils/alphaToHex";
 import { ChartSkeleton } from "../skeleton/chartSkeleton";
+import { addAlphaToHex } from "@/app/utils/alphaToHex";
 
 ChartJS.register(
   CategoryScale,
@@ -56,6 +56,8 @@ type ChartWidgetProps = {
     animationOff?: boolean;
     useCustomLegend?: boolean;
     useCustomPieLegend?: boolean;
+    /** x축 tick 개수 제한 (옵셔널) */
+    tickCount?: number;
   };
   onElementClick?: (data: {
     datasetIndex: number;
@@ -82,6 +84,7 @@ const CustomChart = ({
   const pieOriginalValuesRef = useRef<number[]>([]);
 
   const isPieChart = type === "pie" || type === "doughnut";
+  const DEFAULT_MAX_TICKS = 20;
 
   const baseOptions: any = {
     responsive: true,
@@ -115,10 +118,9 @@ const CustomChart = ({
             // 파이차트 → 값만 표시
             if (isPieChart) return `${context.raw}`;
 
-            // 라인/바 차트 → dataset label + 값 + 날짜 포함
+            // 라인/바 차트 → dataset label + 값
             const datasetLabel = context.dataset.label;
             const value = context.parsed.y;
-            const timestamp = context.parsed.x;
 
             return `[ ${datasetLabel} ] ${value}`;
           },
@@ -126,16 +128,9 @@ const CustomChart = ({
       },
     },
 
+    // y축만 기본 설정, x축은 아래 useEffect에서 span 보고 동적으로 설정
     scales: !isPieChart
       ? {
-          x: {
-            type: "time",
-            time: {
-              unit: "minute",
-              displayFormats: { minute: "HH:mm" },
-              tooltipFormat: "yyyy-MM-dd HH:mm",
-            },
-          },
           y: {
             beginAtZero: true,
           },
@@ -271,9 +266,9 @@ const CustomChart = ({
         ? labels.map(() => main.borderColor)
         : ["#ff6384", "#36a2eb", "#ffce56"].slice(0, labels.length);
 
-      // const backgroundColors = borderColors.map((c) =>
-      //   typeof c === "string" ? addAlphaToHex(c, 0.2) : ""
-      // );
+      const backgroundColors = borderColors.map((c) =>
+        typeof c === "string" ? addAlphaToHex(c, 0.2) : ""
+      );
 
       setChartData({
         labels,
@@ -281,8 +276,7 @@ const CustomChart = ({
           {
             label: main.label,
             data: pieValues,
-            backgroundColor: borderColors,
-            // backgroundColor: backgroundColors,
+            backgroundColor: backgroundColors,
             borderColor: borderColors,
             borderWidth: 1,
           },
@@ -319,9 +313,68 @@ const CustomChart = ({
       borderWidth: ds.borderWidth ?? 1.5,
     }));
 
+    // 전체 x 범위(span) 계산
+    let minX = Infinity;
+    let maxX = -Infinity;
+
+    transformed.forEach((ds) => {
+      ds.data.forEach((pt: any) => {
+        if (pt.x < minX) minX = pt.x;
+        if (pt.x > maxX) maxX = pt.x;
+      });
+    });
+
+    const hasRange = isFinite(minX) && isFinite(maxX);
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    const span = hasRange ? maxX - minX : 0;
+    const isOverOneDay = hasRange && span > oneDayMs;
+
+    // 1일 초과 / 이하에 따라 x축 포맷 분기
+    //  - 1일 초과  → MM/dd HH:mm
+    //  - 1일 이하  → HH:mm:ss
+    const timeDisplayFormat = isOverOneDay ? "MM/dd HH:mm" : "HH:mm:ss";
+
+    const xScale: any = {
+      type: "time",
+      time: {
+        unit: "minute",
+        displayFormats: {
+          minute: timeDisplayFormat, // 1일 초과: MM:dd HH:mm / 이하: HH:mm:ss
+        },
+        tooltipFormat: "yyyy-MM-dd HH:mm:ss",
+      },
+      ticks: {
+        source: "data", // 데이터가 있는 x에서만 tick 생성
+        autoSkip: true,
+        maxTicksLimit: options?.tickCount ?? DEFAULT_MAX_TICKS,
+      },
+    };
+    if (options?.tickCount) {
+      xScale.ticks.maxTicksLimit = options.tickCount;
+    }
+
+    // tick 개수 옵션 반영
+    if (options?.tickCount) {
+      xScale.ticks.maxTicksLimit = options.tickCount;
+    }
+
+    let finalOptions = merge(
+      {},
+      baseOptions,
+      { scales: { x: xScale } },
+      options
+    );
+
+    if (options?.animationOff) {
+      finalOptions.animation = { duration: 0 };
+      finalOptions.transitions = {
+        active: { animation: { duration: 0 } },
+      };
+    }
+
     setChartData({ datasets: transformed });
-    setChartOptions(merge({}, baseOptions, options));
-  }, [datasets, options]);
+    setChartOptions(finalOptions);
+  }, [datasets, options, isPieChart]);
 
   // legend 렌더링 적용
   useEffect(() => {
@@ -335,7 +388,7 @@ const CustomChart = ({
     if (options?.useCustomPieLegend) {
       renderPieLegend(chart);
     }
-  }, [chartData, options?.useCustomLegend]);
+  }, [chartData, options?.useCustomLegend, options?.useCustomPieLegend]);
 
   const handleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     if (!chartRef.current || !chartData || !onElementClick) return;
@@ -418,6 +471,7 @@ const CustomChart = ({
           </button>
         </div>
       )}
+
       {type === "bar" && (
         <Bar
           ref={chartRef}
