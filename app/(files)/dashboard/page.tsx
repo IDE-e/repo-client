@@ -1,4 +1,5 @@
-import { headers } from "next/headers";
+"use client";
+
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -43,42 +44,83 @@ type DashboardData = {
   };
 };
 
-function getProtocol() {
-  return process.env.NODE_ENV === "development" ? "http" : "https";
-}
+async function getDashboardDataSafe(): Promise<
+  { ok: true; data: DashboardData } | { ok: false; error: string }
+> {
+  try {
+    // ✅ 같은 Next 앱 내부 API면 상대경로로 충분
+    const res = await fetch("/api/dashboard", { cache: "no-store" });
 
-async function getBaseUrl() {
-  const envUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.SITE_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      return {
+        ok: false,
+        error: `Dashboard API HTTP ${res.status} ${res.statusText}${
+          text ? ` — ${text.slice(0, 180)}` : ""
+        }`,
+      };
+    }
 
-  if (envUrl) return envUrl;
+    const json = await res.json().catch(() => null);
 
-  const h = await headers();
-  const host = h.get("host") ?? "localhost:3000";
-  return `${getProtocol()}://${host}`;
-}
+    if (!json?.success || !json?.data) {
+      return {
+        ok: false,
+        error: "Dashboard API 응답(success/data)이 올바르지 않습니다.",
+      };
+    }
 
-async function getDashboardData(): Promise<DashboardData> {
-  const baseUrl = await getBaseUrl();
-
-  const res = await fetch(`${baseUrl}/api/dashboard`, {
-    cache: "no-store",
-  });
-
-  const json = await res.json().catch(() => null);
-
-  if (!json?.success) {
-    throw new Error("Failed to load dashboard data");
+    return { ok: true, data: json.data as DashboardData };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Unknown server error",
+    };
   }
-
-  return json.data as DashboardData;
 }
 
 export default async function DashboardPage() {
-  const data = await getDashboardData();
-  const { summary, tasks, activity, environment } = data;
+  const result = await getDashboardDataSafe();
+
+  if (!result.ok) {
+    return (
+      <main className="space-y-4">
+        <section className="rounded-md border border-border-default bg-bg-default p-4">
+          <h1 className="text-2xl font-bold text-text-light">
+            Project Dashboard
+          </h1>
+          <p className="mt-2 text-sm text-text-soft">
+            대시보드 데이터를 불러오는 중 문제가 발생했습니다.
+          </p>
+
+          <div className="mt-3 rounded-md border border-border-default bg-bg-dark p-3 text-xs text-text-deep font-mono">
+            {result.error}
+          </div>
+
+          <div className="mt-4 flex gap-2">
+            <Link
+              href="/api/dashboard"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center rounded-md border border-border-default bg-bg-default px-3 py-1.5 text-xs font-medium text-text-light hover:bg-bg-hover transition"
+            >
+              Open /api/dashboard
+            </Link>
+            <Link
+              href="/demo/dashboard"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center rounded-md border border-border-default bg-bg-default px-3 py-1.5 text-xs font-medium text-text-light hover:bg-bg-hover transition"
+            >
+              Open dashboard demo
+            </Link>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  const { summary, tasks, activity, environment } = result.data;
 
   const buildDot =
     summary.build.status === "Passing"
@@ -89,7 +131,6 @@ export default async function DashboardPage() {
 
   return (
     <main className="space-y-8">
-      {/* 제목 + 설명 + 데모 버튼 */}
       <section className="flex items-start justify-between gap-4">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold text-text-light">
@@ -101,7 +142,6 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        {/* 데모 페이지로 이동하는 버튼 */}
         <Link
           href="/demo/dashboard"
           target="_blank"
@@ -112,7 +152,6 @@ export default async function DashboardPage() {
         </Link>
       </section>
 
-      {/* 상단 요약 카드들 */}
       <section className="grid gap-4 md:grid-cols-3">
         <div className="rounded-md border border-border-default bg-bg-default p-4 space-y-2">
           <div className="text-xs uppercase tracking-wide text-text-soft">
@@ -158,9 +197,7 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      {/* 할 일 / 작업 리스트 */}
       <section className="grid gap-6 lg:grid-cols-2">
-        {/* Left: Todo-like panel */}
         <div className="rounded-md border border-border-default bg-bg-default p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-text-light">
@@ -196,7 +233,6 @@ export default async function DashboardPage() {
           </ul>
         </div>
 
-        {/* Right: Activity log / pseudo-console */}
         <div className="rounded-md border border-border-default bg-bg-dark">
           <div className="flex items-center justify-between border-b border-border-default px-4 py-2">
             <span className="text-xs text-text-soft">Activity Log</span>
@@ -221,7 +257,6 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      {/* 하단: 간단한 설정 요약 */}
       <section className="rounded-md border border-border-default bg-bg-default p-4">
         <h2 className="mb-3 text-sm font-semibold text-text-light">
           Environment
