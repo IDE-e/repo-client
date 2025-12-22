@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: repo-client
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: repo-client
+  template:
+    metadata:
+      labels:
+        app: repo-client
+    spec:
+      containers:
+        - name: web
+          image: repo-client:latest
+          ports:
+            - containerPort: 3000
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: repo-client
+spec:
+  selector:
+    app: repo-client
+  ports:
+    - port: 80
+      targetPort: 3000
