@@ -2,23 +2,16 @@
 
 import { useState } from "react";
 import { AlertTriangle, CheckCircle2, Info, Filter } from "lucide-react";
+import { LogEntry, LogLevel } from "@/app/types/type";
 
-type LogLevel = "info" | "warn" | "error";
+type LogType = Omit<LogEntry, "createdAt">;
+type LogEntryType = LogType & { source: string; details?: string };
 
-type LogEntry = {
-  id: number;
-  timestamp: string;
-  level: LogLevel;
-  source: string;
-  message: string;
-  details?: string;
-};
-
-const MOCK_LOGS: LogEntry[] = [
+const MOCK_LOGS: LogEntryType[] = [
   {
     id: 1,
     timestamp: "2025-11-14 10:31:22",
-    level: "error",
+    level: "ERROR",
     source: "api/auth",
     message: "Login request failed with 500 Internal Server Error",
     details:
@@ -27,7 +20,7 @@ const MOCK_LOGS: LogEntry[] = [
   {
     id: 2,
     timestamp: "2025-11-14 10:29:10",
-    level: "warn",
+    level: "WARN",
     source: "worker/queue",
     message: "Job processing delayed (queue length: 182)",
     details:
@@ -36,7 +29,7 @@ const MOCK_LOGS: LogEntry[] = [
   {
     id: 3,
     timestamp: "2025-11-14 10:25:03",
-    level: "info",
+    level: "INFO",
     source: "web/frontend",
     message: "User navigated to /dashboard",
     details: "userId=3912\npath=/dashboard\nuserAgent=Chrome/142.0",
@@ -44,7 +37,7 @@ const MOCK_LOGS: LogEntry[] = [
   {
     id: 4,
     timestamp: "2025-11-14 10:20:41",
-    level: "info",
+    level: "INFO",
     source: "api/metrics",
     message: "Health check passed",
     details: "GET /api/health\nstatus=200\ndb=ok\nredis=ok",
@@ -52,7 +45,7 @@ const MOCK_LOGS: LogEntry[] = [
   {
     id: 5,
     timestamp: "2025-11-14 10:18:09",
-    level: "warn",
+    level: "WARN",
     source: "db/pool",
     message: "Connection pool usage 85%",
     details: "max=50\nused=43\nidle=2",
@@ -61,11 +54,11 @@ const MOCK_LOGS: LogEntry[] = [
 
 function levelColor(level: LogLevel) {
   switch (level) {
-    case "error":
+    case "ERROR":
       return "text-error";
-    case "warn":
+    case "WARN":
       return "text-warning";
-    case "info":
+    case "INFO":
     default:
       return "text-[#4fc1ff]";
   }
@@ -73,11 +66,11 @@ function levelColor(level: LogLevel) {
 
 function levelBadgeClass(level: LogLevel) {
   switch (level) {
-    case "error":
+    case "ERROR":
       return "bg-[#5a1e1e] text-error border border-[#8b2e2e]";
-    case "warn":
+    case "WARN":
       return "bg-[#4a3a1a] text-warning border border-[#8c6f2a]";
-    case "info":
+    case "INFO":
     default:
       return "bg-[#12354a] text-[#4fc1ff] border border-[#1e4e6b]";
   }
@@ -85,11 +78,11 @@ function levelBadgeClass(level: LogLevel) {
 
 function levelIcon(level: LogLevel) {
   switch (level) {
-    case "error":
+    case "ERROR":
       return <AlertTriangle size={14} />;
-    case "warn":
+    case "WARN":
       return <AlertTriangle size={14} />;
-    case "info":
+    case "INFO":
     default:
       return <Info size={14} />;
   }
@@ -97,8 +90,10 @@ function levelIcon(level: LogLevel) {
 
 export default function LogsPage() {
   const [selectedLevel, setSelectedLevel] = useState<LogLevel | "all">("all");
-  const [search, setSearch] = useState("");
-  const [selectedLog, setSelectedLog] = useState<LogEntry | null>(MOCK_LOGS[0]);
+  const [search, setSearch] = useState<string>("");
+  const [selectedLog, setSelectedLog] = useState<LogEntryType | null>(
+    MOCK_LOGS[0]
+  );
 
   const filteredLogs = MOCK_LOGS.filter((log) => {
     const levelMatch =
@@ -231,11 +226,11 @@ export default function LogsPage() {
         <div className="w-1/3 border border-border-default rounded bg-bg-dark flex flex-col overflow-hidden">
           <div className="px-3 py-2 text-xs bg-bg-default border-b border-border-default flex items-center justify-between">
             <span className="text-text-soft">DETAIL</span>
-            {selectedLog?.level === "error" ? (
+            {selectedLog?.level === "ERROR" ? (
               <span className="flex items-center gap-1 text-error text-[11px]">
                 <AlertTriangle size={12} /> Needs attention
               </span>
-            ) : selectedLog?.level === "warn" ? (
+            ) : selectedLog?.level === "WARN" ? (
               <span className="flex items-center gap-1 text-warning text-[11px]">
                 <AlertTriangle size={12} /> Check when possible
               </span>
