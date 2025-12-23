@@ -1,60 +1,14 @@
+import { corsHeaders } from "@/app/types/header";
+import { DashboardData } from "@/app/types/type";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-type BuildStatus = "Passing" | "Failing" | "Running";
-
-type DashboardData = {
-  summary: {
-    activeBranch: string;
-    lastDeploy: string;
-    openIssues: {
-      total: number;
-      critical: number;
-      major: number;
-      minor: number;
-    };
-    build: {
-      status: BuildStatus;
-      lastRunLabel: string; // e.g. "#184 · 2 min ago"
-    };
-  };
-  tasks: {
-    completed: number;
-    total: number;
-    items: Array<{
-      id: string;
-      done: boolean;
-      title: string;
-      meta: string;
-      accent?: "point" | "danger";
-    }>;
-  };
-  activity: Array<{
-    hash: string;
-    message: string;
-    time: string;
-  }>;
-  environment: {
-    runtime: string[];
-    ui: string[];
-    charts: string[];
-  };
-};
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Content-Type": "application/json",
-};
 
 export async function OPTIONS() {
   return new Response(null, { status: 204, headers: corsHeaders });
 }
 
-// GET /api/dashboard
 export async function GET() {
-  // You can evolve this into a global singleton later if you want mutation.
   const mock: DashboardData = {
     summary: {
       activeBranch: "main",
