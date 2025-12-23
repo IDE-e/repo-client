@@ -10,19 +10,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-
-type AlertLevel = "INFO" | "WARN" | "ERROR" | "CRITICAL";
-
-type AlertEntry = {
-  id: number;
-  timestamp: string;
-  level: AlertLevel;
-  title: string;
-  message: string;
-  source?: string;
-  acknowledged: boolean;
-  createdAt: string;
-};
+import { AlertLevel, AlertEntry } from "@/app/types/type";
 
 const LEVEL_COLOR: Record<AlertLevel, string> = {
   INFO: "#4fc1ff",
