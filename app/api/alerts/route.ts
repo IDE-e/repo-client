@@ -1,25 +1,8 @@
+import { corsHeaders } from "@/app/types/header";
+import { AlertEntry, AlertLevel } from "@/app/types/type";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-type AlertLevel = "INFO" | "WARN" | "ERROR" | "CRITICAL";
-
-type AlertEntry = {
-  id: number;
-  timestamp: string; // UI-friendly
-  level: AlertLevel;
-  title: string;
-  message: string;
-  source?: string; // broker/topic/service 등
-  acknowledged: boolean;
-  createdAt: string; // ISO
-};
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Content-Type": "application/json",
-};
 
 // ---- global singleton store (dev-friendly) ----
 const g = globalThis as unknown as {

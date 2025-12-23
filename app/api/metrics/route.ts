@@ -1,11 +1,5 @@
-// app/api/metrics/route.ts
-
-type MetricDataPoint = {
-  timestamp: number;
-  value: number;
-};
-
-type MetricType = "requests" | "errors" | "db";
+import { corsHeaders } from "@/app/types/header";
+import { MetricType, MetricDataPoint } from "@/app/types/type";
 
 // 각 metric별로 최근 20개의 데이터 포인트 저장
 const metricsHistory: Record<MetricType, MetricDataPoint[]> = {
@@ -98,13 +92,6 @@ setInterval(() => {
   });
 }, 10000); // 10초마다 업데이트
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Content-Type": "application/json",
-};
-
 export async function OPTIONS() {
   return new Response(null, {
     status: 204,
@@ -137,7 +124,7 @@ export async function GET(request: Request) {
 
     const data = metricsHistory[type];
 
-    console.log(`✅ Returning ${data.length} data points for ${type}`);
+    console.log(`Returning ${data.length} data points for ${type}`);
 
     return new Response(
       JSON.stringify({
@@ -187,7 +174,7 @@ export async function POST(request: Request) {
       metricsHistory[type].shift();
     }
 
-    console.log(`✅ Added data point to ${type}:`, newPoint);
+    console.log(`Added data point to ${type}:`, newPoint);
 
     return new Response(
       JSON.stringify({

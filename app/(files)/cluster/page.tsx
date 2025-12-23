@@ -2,22 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { RefreshCw, Server, Activity, Database, HardDrive } from "lucide-react";
-
-type ClusterStatus = "HEALTHY" | "DEGRADED" | "DOWN";
-
-type ClusterSummary = {
-  clusterName: string;
-  status: ClusterStatus;
-  brokers: number;
-  topics: number;
-  partitions: number;
-  underReplicated: number;
-  messageInPerSec: number;
-  messageOutPerSec: number;
-  storageUsedGB: number;
-  storageTotalGB: number;
-  updatedAt: string;
-};
+import { ClusterStatus, ClusterSummary } from "@/app/types/type";
 
 const STATUS_COLOR: Record<ClusterStatus, string> = {
   HEALTHY: "#6ee7b7",

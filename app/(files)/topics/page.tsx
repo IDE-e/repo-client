@@ -2,26 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { RefreshCw, Layers, ArrowUpRight, ArrowDownRight } from "lucide-react";
-
-type TopicEntry = {
-  name: string;
-  partitions: number;
-  replicationFactor: number;
-  messageInPerSec: number;
-  messageOutPerSec: number;
-  lag: number;
-  sizeGB: number;
-  updatedAt: string;
-};
+import { TopicEntry } from "@/app/types/type";
 
 export default function TopicsPage() {
   const [topics, setTopics] = useState<TopicEntry[]>([]);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState<string>("");
   const [sortKey, setSortKey] = useState<
     "name" | "lag" | "in" | "out" | "size"
   >("lag");
-  const [desc, setDesc] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [desc, setDesc] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const fetchTopics = async () => {
     setIsLoading(true);

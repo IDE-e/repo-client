@@ -2,16 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { RefreshCw, HeartPulse, Filter } from "lucide-react";
-
-type ServiceStatus = "UP" | "DEGRADED" | "DOWN";
-
-type ServiceHealth = {
-  name: string;
-  status: ServiceStatus;
-  latencyMs: number;
-  errorRate: number;
-  updatedAt: string;
-};
+import { ServiceStatus, ServiceHealth } from "@/app/types/type";
 
 const STATUS_COLOR: Record<ServiceStatus, string> = {
   UP: "#6ee7b7",

@@ -1,54 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState, useCallback } from "react";
+import { DashboardData, BuildStatus } from "@/app/types/type";
 
 export const dynamic = "force-dynamic";
-
-type BuildStatus = "Passing" | "Failing" | "Running";
-
-type DashboardData = {
-  summary: {
-    activeBranch: string;
-    lastDeploy: string;
-    openIssues: {
-      total: number;
-      critical: number;
-      major: number;
-      minor: number;
-    };
-    build: {
-      status: BuildStatus;
-      lastRunLabel: string;
-    };
-  };
-  tasks: {
-    completed: number;
-    total: number;
-    items: Array<{
-      id: string;
-      done: boolean;
-      title: string;
-      meta: string;
-      accent?: "point" | "danger";
-    }>;
-  };
-  activity: Array<{
-    hash: string;
-    message: string;
-    time: string;
-  }>;
-  environment: {
-    runtime: string[];
-    ui: string[];
-    charts: string[];
-  };
-};
 
 async function getDashboardDataSafe(): Promise<
   { ok: true; data: DashboardData } | { ok: false; error: string }
 > {
   try {
-    // ✅ 같은 Next 앱 내부 API면 상대경로로 충분
     const res = await fetch("/api/dashboard", { cache: "no-store" });
 
     if (!res.ok) {
@@ -79,10 +40,58 @@ async function getDashboardDataSafe(): Promise<
   }
 }
 
-export default async function DashboardPage() {
-  const result = await getDashboardDataSafe();
+type LoadState =
+  | { status: "loading" }
+  | { status: "error"; error: string }
+  | { status: "success"; data: DashboardData };
 
-  if (!result.ok) {
+function getBuildDot(status: BuildStatus): string {
+  return status === "Passing"
+    ? "bg-[#22c55e]"
+    : status === "Failing"
+    ? "bg-[#f97373]"
+    : "bg-[#fbbf24]";
+}
+
+export default function DashboardPage() {
+  const [state, setState] = useState<LoadState>({ status: "loading" });
+
+  const fetchOnce = useCallback(async () => {
+    setState({ status: "loading" });
+    const result = await getDashboardDataSafe();
+    if (!result.ok) setState({ status: "error", error: result.error });
+    else setState({ status: "success", data: result.data });
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      const result = await getDashboardDataSafe();
+      if (!alive) return;
+      if (!result.ok) setState({ status: "error", error: result.error });
+      else setState({ status: "success", data: result.data });
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  if (state.status === "loading") {
+    return (
+      <main className="space-y-4">
+        <section className="rounded-md border border-border-default bg-bg-default p-4">
+          <h1 className="text-2xl font-bold text-text-light">
+            Project Dashboard
+          </h1>
+          <p className="mt-2 text-sm text-text-soft">불러오는 중...</p>
+        </section>
+      </main>
+    );
+  }
+
+  if (state.status === "error") {
     return (
       <main className="space-y-4">
         <section className="rounded-md border border-border-default bg-bg-default p-4">
@@ -94,10 +103,10 @@ export default async function DashboardPage() {
           </p>
 
           <div className="mt-3 rounded-md border border-border-default bg-bg-dark p-3 text-xs text-text-deep font-mono">
-            {result.error}
+            {state.error}
           </div>
 
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4 flex flex-wrap gap-2">
             <Link
               href="/api/dashboard"
               target="_blank"
@@ -106,6 +115,7 @@ export default async function DashboardPage() {
             >
               Open /api/dashboard
             </Link>
+
             <Link
               href="/demo/dashboard"
               target="_blank"
@@ -114,23 +124,25 @@ export default async function DashboardPage() {
             >
               Open dashboard demo
             </Link>
+
+            <button
+              onClick={fetchOnce}
+              className="inline-flex items-center rounded-md border border-border-default bg-bg-default px-3 py-1.5 text-xs font-medium text-text-light hover:bg-bg-hover transition"
+            >
+              Retry
+            </button>
           </div>
         </section>
       </main>
     );
   }
 
-  const { summary, tasks, activity, environment } = result.data;
-
-  const buildDot =
-    summary.build.status === "Passing"
-      ? "bg-[#22c55e]"
-      : summary.build.status === "Failing"
-      ? "bg-[#f97373]"
-      : "bg-[#fbbf24]";
+  const { summary, tasks, activity, environment } = state.data;
+  const buildDot = getBuildDot(summary.build.status);
 
   return (
     <main className="space-y-8">
+      {/* 제목 + 설명 + 데모 버튼 */}
       <section className="flex items-start justify-between gap-4">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold text-text-light">
@@ -152,6 +164,7 @@ export default async function DashboardPage() {
         </Link>
       </section>
 
+      {/* 상단 요약 카드들 */}
       <section className="grid gap-4 md:grid-cols-3">
         <div className="rounded-md border border-border-default bg-bg-default p-4 space-y-2">
           <div className="text-xs uppercase tracking-wide text-text-soft">
@@ -197,7 +210,9 @@ export default async function DashboardPage() {
         </div>
       </section>
 
+      {/* 할 일 / 작업 리스트 */}
       <section className="grid gap-6 lg:grid-cols-2">
+        {/* Left: Todo-like panel */}
         <div className="rounded-md border border-border-default bg-bg-default p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-text-light">
@@ -233,6 +248,7 @@ export default async function DashboardPage() {
           </ul>
         </div>
 
+        {/* Right: Activity log / pseudo-console */}
         <div className="rounded-md border border-border-default bg-bg-dark">
           <div className="flex items-center justify-between border-b border-border-default px-4 py-2">
             <span className="text-xs text-text-soft">Activity Log</span>
@@ -257,6 +273,7 @@ export default async function DashboardPage() {
         </div>
       </section>
 
+      {/* 하단: 간단한 설정 요약 */}
       <section className="rounded-md border border-border-default bg-bg-default p-4">
         <h2 className="mb-3 text-sm font-semibold text-text-light">
           Environment

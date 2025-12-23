@@ -8,15 +8,7 @@ import {
   Trash2,
   RefreshCw,
 } from "lucide-react";
-
-type LogLevel = "INFO" | "WARN" | "ERROR";
-
-interface LogEntry {
-  id: number;
-  timestamp: string;
-  level: LogLevel;
-  message: string;
-}
+import { LogLevel, LogEntry } from "@/app/types/type";
 
 const COLORS: Record<LogLevel, string> = {
   INFO: "#4fc1ff",
@@ -25,17 +17,17 @@ const COLORS: Record<LogLevel, string> = {
 };
 
 export default function LogExplorerPage() {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [logs, setLogs] = useState<Omit<LogEntry, "createdAt">[]>([]);
   const [levels, setLevels] = useState<Record<LogLevel, boolean>>({
     INFO: true,
     WARN: true,
     ERROR: true,
   });
-  const [searchText, setSearchText] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [searchText, setSearchText] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // API에서 로그 가져오기
+  // API
   const fetchLogs = async () => {
     setIsLoading(true);
     try {
@@ -62,7 +54,7 @@ export default function LogExplorerPage() {
 
       if (result.success) {
         setLogs(result.data);
-        console.log("✅ Logs loaded:", result.data.length);
+        console.log("Logs loaded:", result.data.length);
       }
     } catch (error) {
       console.error("❌ Failed to fetch logs:", error);

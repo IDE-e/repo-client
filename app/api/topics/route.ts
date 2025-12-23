@@ -1,23 +1,8 @@
+import { corsHeaders } from "@/app/types/header";
+import { TopicEntry } from "@/app/types/type";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-type TopicEntry = {
-  name: string;
-  partitions: number;
-  replicationFactor: number;
-  messageInPerSec: number;
-  messageOutPerSec: number;
-  lag: number;
-  sizeGB: number;
-  updatedAt: string;
-};
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Content-Type": "application/json",
-};
 
 const g = globalThis as unknown as {
   __mockTopics?: TopicEntry[];

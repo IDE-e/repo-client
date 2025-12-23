@@ -2,15 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Globe, Play, Loader2, Save, Trash2, ChevronDown } from "lucide-react";
-
-type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
-
-type SavedRequest = {
-  id: number;
-  name: string;
-  method: HttpMethod;
-  url: string;
-};
+import { HttpMethod, SavedRequest } from "@/app/types/type";
 
 export default function ApiClientPage() {
   const [method, setMethod] = useState<HttpMethod>("GET");

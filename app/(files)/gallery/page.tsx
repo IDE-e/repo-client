@@ -8,13 +8,9 @@ import {
   ArrowRight,
   Type,
   ToggleLeft,
-  CheckSquare,
   CheckIcon,
 } from "lucide-react";
-
-type Variant = "primary" | "secondary" | "ghost";
-
-type CategoryId = "all" | "buttons" | "badges" | "cards" | "forms" | "checkbox";
+import { CategoryId, Variant } from "@/app/types/type";
 
 const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: "all", label: "All" },
@@ -28,11 +24,9 @@ const CATEGORIES: { id: CategoryId; label: string }[] = [
 export default function ComponentGalleryPage() {
   const [activeCategory, setActiveCategory] = useState<CategoryId>("all");
   const [buttonVariant, setButtonVariant] = useState<Variant>("primary");
-
-  // New components states
-  const [inputValue, setInputValue] = useState("");
-  const [isEnabled, setIsEnabled] = useState(true);
-  const [isChecked, setIsChecked] = useState(false);
+  const [inputValue, setInputValue] = useState<string>("");
+  const [isEnabled, setIsEnabled] = useState<boolean>(true);
+  const [isChecked, setIsChecked] = useState<boolean>(false);
 
   const buttonClass = (variant: Variant) => {
     switch (variant) {

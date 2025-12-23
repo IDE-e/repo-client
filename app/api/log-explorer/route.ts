@@ -1,21 +1,8 @@
-type LogEntry = {
-  id: number;
-  timestamp: string;
-  level: "INFO" | "WARN" | "ERROR";
-  message: string;
-  createdAt: string;
-};
+import { corsHeaders } from "@/app/types/header";
+import { LogEntry } from "@/app/types/type";
 
 // 메모리에 임시로 로그 저장
 let logs: LogEntry[] = [];
-
-// CORS 헤더 추가
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Content-Type": "application/json",
-};
 
 // OPTIONS 요청 핸들러 (CORS preflight)
 export async function OPTIONS() {
@@ -48,7 +35,7 @@ export async function GET(request: Request) {
       count: filteredLogs.length,
     };
 
-    console.log("✅ Sending response:", responseData);
+    console.log("Sending response:", responseData);
 
     return new Response(JSON.stringify(responseData), {
       status: 200,
@@ -94,7 +81,7 @@ export async function POST(request: Request) {
 
     logs.push(newLog);
 
-    console.log("✅ New log added:", newLog);
+    console.log("New log added:", newLog);
     console.log("📊 Total logs:", logs.length);
 
     const responseData = { success: true, data: newLog };
@@ -120,7 +107,7 @@ export async function DELETE() {
     const count = logs.length;
     logs = [];
 
-    console.log(`✅ Cleared ${count} logs`);
+    console.log(`Cleared ${count} logs`);
 
     const responseData = {
       success: true,

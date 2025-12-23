@@ -1,27 +1,8 @@
+import { corsHeaders } from "@/app/types/header";
+import { BrokerEntry, BrokerStatus } from "@/app/types/type";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-type BrokerStatus = "ONLINE" | "OFFLINE" | "DEGRADED";
-
-type BrokerEntry = {
-  id: number;
-  host: string;
-  rack?: string;
-  status: BrokerStatus;
-  cpu: number; // %
-  memory: number; // %
-  disk: number; // %
-  networkIn: number; // MB/s
-  networkOut: number; // MB/s
-  updatedAt: string;
-};
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Content-Type": "application/json",
-};
 
 const g = globalThis as unknown as {
   __mockBrokers?: BrokerEntry[];

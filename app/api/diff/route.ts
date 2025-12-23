@@ -1,21 +1,9 @@
+import { corsHeaders } from "@/app/types/header";
+import { DiffPayload } from "@/app/types/type";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type DiffPayload = {
-  original: string;
-  modified: string;
-  language?: string; // optional hint for future use
-  updatedAt: string;
-};
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Content-Type": "application/json",
-};
-
-// ---- dev-friendly global singleton store ----
 const g = globalThis as unknown as {
   __mockDiff?: DiffPayload;
 };

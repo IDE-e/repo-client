@@ -2,21 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { RefreshCw, Cpu, HardDrive, Network, Server } from "lucide-react";
-
-type BrokerStatus = "ONLINE" | "OFFLINE" | "DEGRADED";
-
-type BrokerEntry = {
-  id: number;
-  host: string;
-  rack?: string;
-  status: BrokerStatus;
-  cpu: number;
-  memory: number;
-  disk: number;
-  networkIn: number;
-  networkOut: number;
-  updatedAt: string;
-};
+import { BrokerStatus, BrokerEntry } from "@/app/types/type";
 
 const STATUS_COLOR: Record<BrokerStatus, string> = {
   ONLINE: "#6ee7b7",

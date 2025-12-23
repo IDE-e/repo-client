@@ -1,26 +1,8 @@
+import { corsHeaders } from "@/app/types/header";
+import { ClusterSummary } from "@/app/types/type";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-type ClusterSummary = {
-  clusterName: string;
-  status: "HEALTHY" | "DEGRADED" | "DOWN";
-  brokers: number;
-  topics: number;
-  partitions: number;
-  underReplicated: number;
-  messageInPerSec: number;
-  messageOutPerSec: number;
-  storageUsedGB: number;
-  storageTotalGB: number;
-  updatedAt: string;
-};
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Content-Type": "application/json",
-};
 
 const g = globalThis as unknown as {
   __mockCluster?: ClusterSummary;

@@ -1,14 +1,8 @@
+import { corsHeaders } from "@/app/types/header";
+import { HttpMethod } from "@/app/types/type";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Content-Type": "application/json",
-};
 
 export async function OPTIONS() {
   return new Response(null, { status: 204, headers: corsHeaders });

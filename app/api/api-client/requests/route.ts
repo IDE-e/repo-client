@@ -1,16 +1,10 @@
+import { corsHeaders } from "@/app/types/header";
+import { SavedRequest, HttpMethod } from "@/app/types/type";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
-
-type SavedRequest = {
-  id: number;
-  name: string;
-  method: HttpMethod;
-  url: string;
-};
-
-// 초기 시드(너 UI에 있던 mock 그대로)
+// 초기 시드
 const SEED: SavedRequest[] = [
   {
     id: 1,
@@ -42,13 +36,6 @@ if (!g.__apiClientSavedRequests) {
 }
 
 const store = () => g.__apiClientSavedRequests!;
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Content-Type": "application/json",
-};
 
 export async function OPTIONS() {
   return new Response(null, { status: 204, headers: corsHeaders });
