@@ -1,22 +1,8 @@
+import { corsHeaders } from "@/app/types/header";
+import { ServiceHealth } from "@/app/types/type";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-type ServiceStatus = "UP" | "DEGRADED" | "DOWN";
-
-type ServiceHealth = {
-  name: string;
-  status: ServiceStatus;
-  latencyMs: number;
-  errorRate: number; // %
-  updatedAt: string;
-};
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Content-Type": "application/json",
-};
 
 const g = globalThis as unknown as {
   __mockHealth?: ServiceHealth[];
