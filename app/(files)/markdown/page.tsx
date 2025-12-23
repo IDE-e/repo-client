@@ -27,9 +27,9 @@ const hello = (name: string) => {
 `;
 
 export default function MarkdownPage() {
-  const [filename, setFilename] = useState("README.md");
-  const [content, setContent] = useState(INITIAL_MD);
-  const [savedContent, setSavedContent] = useState(INITIAL_MD);
+  const [filename, setFilename] = useState<string>("README.md");
+  const [content, setContent] = useState<string>(INITIAL_MD);
+  const [savedContent, setSavedContent] = useState<string>(INITIAL_MD);
 
   const isDirty = content !== savedContent;
 
