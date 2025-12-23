@@ -9,21 +9,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import CustomChart from "@/app/components/chart/customChart";
-
-type MetricType = "requests" | "errors" | "db";
-
-type MetricDataPoint = {
-  timestamp: number;
-  value: number;
-};
-
-type ChartDataset = {
-  label: string;
-  data: MetricDataPoint[];
-  borderColor: string;
-  backgroundColor: string;
-  fill?: boolean;
-};
+import { ChartDataset, MetricDataPoint, MetricType } from "@/app/types/type";
 
 const METRIC_CONFIGS: Record<
   MetricType,
@@ -70,7 +56,7 @@ export default function MetricsViewerPage() {
     errors: [],
     db: [],
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   // API에서 특정 metric 데이터 가져오기
@@ -90,14 +76,14 @@ export default function MetricsViewerPage() {
           ...prev,
           [type]: result.data,
         }));
-        console.log(`✅ ${type} data loaded:`, result.data.length, "points");
+        console.log(`${type} data loaded:`, result.data.length, "points");
       }
     } catch (error) {
       console.error(`❌ Failed to fetch ${type} data:`, error);
     }
   };
 
-  // 모든 metrics 데이터 가져오기
+  // metrics 데이터
   const fetchAllMetrics = async () => {
     setIsLoading(true);
     try {
