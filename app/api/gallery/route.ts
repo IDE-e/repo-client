@@ -1,51 +1,8 @@
+import { corsHeaders } from "@/app/types/header";
+import { GalleryPayload } from "@/app/types/type";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-type Variant = "primary" | "secondary" | "ghost";
-
-type GalleryPayload = {
-  meta: {
-    title: string;
-    version: string;
-    updatedAt: string;
-  };
-  categories: Array<{
-    id: string;
-    label: string;
-    activeByDefault: boolean;
-  }>;
-  button: {
-    description: string;
-    variants: Variant[];
-    usageTemplate: (variant: Variant) => string;
-  };
-  badge: {
-    description: string;
-    examples: Array<{
-      label: string;
-      tone: "info" | "warning" | "error" | "draft";
-      icon: "check" | "dot" | "square";
-    }>;
-    usageSnippet: string;
-  };
-  infoCard: {
-    description: string;
-    examples: Array<{
-      title: string;
-      value: string;
-      hint?: string;
-      tone: "info" | "success" | "warning";
-    }>;
-    usageSnippet: string;
-  };
-};
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, PATCH, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Content-Type": "application/json",
-};
 
 // ---- dev-friendly global singleton store ----
 const g = globalThis as unknown as {
